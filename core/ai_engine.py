@@ -1,18 +1,23 @@
 import os
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# 明示的に環境変数を指定してクライアントを作成します
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY")
+)
 
-TEMPLATES = {
-    "Business": "プロのビジネス秘書として、成果・課題・予定を構造化せよ。",
-    "Concise": "要点のみを箇条書きで3行以内でまとめよ。",
-    "Weekly": "KPT形式（Keep, Problem, Try）で今週の振り返りを作成せよ。"
-}
-
-def generate_report(memo, style="Business"):
-    prompt = TEMPLATES.get(style, TEMPLATES["Business"])
-    res = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "system", "content": prompt}, {"role": "user", "content": memo}]
-    )
-    return res.choices[0].message.content
+def generate_report(memo):
+    try:
+        # 念のためキーが取得できているか確認するログ（デバッグ用）
+        print(f"DEBUG: Key loaded: {os.environ.get('OPENAI_API_KEY')[:5]}...") 
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "あなたは優秀な秘書です。"},
+                {"role": "user", "content": memo}
+            ]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"エラーが発生しました: {str(e)}"
